@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: stg_statsbomb__matches
+    description: One row per match of the season.
+    data_tests:
+      - row_count:
+          arguments: {min: 34, max: 34}
+    columns:
+      - name: match_id
+        data_tests: [unique, not_null]
+      - name: match_date
+        data_tests: [not_null]
+      - name: home_score
+        data_tests: [not_null]
+
+  - name: stg_statsbomb__events
+    description: One row per event; common columns plus the raw JSON payload.
+    columns:
+      - name: event_id
+        data_tests: [unique, not_null]
+      - name: match_id
+        data_tests:
+          - relationships:
+              arguments: {to: ref('stg_statsbomb__matches'), field: match_id}
+      - name: location_x
+        data_tests:
+          - accepted_range:
+              arguments: {min: 0, max: 120}
+
+  - name: stg_statsbomb__lineups
+    description: One row per player listed in a match squad.
+    data_tests:
+      - unique_combination:
+          arguments: {columns: [match_id, player_id]}
+    columns:
+      - name: player_id
+        data_tests: [not_null]
+      - name: jersey_number
+        data_tests: [not_null]
+
+  - name: stg_statsbomb__shots
+    description: One row per shot in periods 1-4, with StatsBomb xG.
+    columns:
+      - name: event_id
+        data_tests: [unique, not_null]
+      - name: xg
+        data_tests:
+          - not_null
+          - accepted_range:
+              arguments: {min: 0, max: 1}

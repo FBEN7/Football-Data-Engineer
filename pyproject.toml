@@ -1,0 +1,36 @@
+[project]
+name = "club-data-platform"
+version = "0.1.0"
+description = "A club's data platform in miniature: StatsBomb, Transfermarkt and football-data.co.uk consolidated with Dagster, dbt and DuckDB"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "dagster>=1.10",
+    "dagster-webserver>=1.10",
+    "dagster-dbt>=0.26",
+    "dbt-core>=1.9,<2",
+    "dbt-duckdb>=1.9",
+    "duckdb>=1.2",
+    "pandas>=2.1",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.dagster]
+module_name = "cdp.definitions"
+code_location_name = "club_data_platform"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

@@ -1,0 +1,52 @@
+name: club
+version: "1.0.0"
+config-version: 2
+profile: club
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: target
+clean-targets: [target, dbt_packages]
+
+vars:
+  # The season the platform covers (see src/cdp/config.py).
+  transfermarkt_competition_id: L1
+  transfermarkt_season: 2023
+  season_start: "2023-08-01"
+
+# Milestones are switched on one folder at a time (docs/GUIDE.md).
+# A disabled folder is invisible to dbt and Dagster, tests included.
+models:
+  club:
+    +materialized: view
+    staging:
+      # Tables, not views: a view over the lake would store the lake's (relative) path
+      # and break when the warehouse is opened from another directory.
+      +materialized: table
+      statsbomb:
+        +enabled: true
+      transfermarkt:
+        +enabled: false  # M1
+      football_data:
+        +enabled: false  # M1
+    intermediate:
+      matches:
+        +enabled: false  # M3
+      players:
+        +enabled: false  # M4
+    marts:
+      +enabled: false  # M5
+      +materialized: table
+    reports:
+      +enabled: false  # M6
+      +materialized: table
+
+seeds:
+  club:
+    +enabled: false  # M2
+
+data_tests:
+  club:
+    +enabled: true

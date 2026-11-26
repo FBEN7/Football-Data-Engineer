@@ -1,0 +1,120 @@
+version: 2
+
+# M1. Filter every table to the season's Bundesliga games (vars: transfermarkt_competition_id,
+# transfermarkt_season), rename to the platform's conventions, type every column.
+models:
+  - name: stg_transfermarkt__games
+    description: One row per game of the 2023/24 Bundesliga (all 306, not only Leverkusen's).
+    data_tests:
+      - row_count:
+          arguments: {min: 306, max: 306}
+    columns:
+      - name: game_id
+        data_tests: [unique, not_null]
+      - name: game_date
+        data_tests: [not_null]
+      - name: home_club_id
+        data_tests: [not_null]
+      - name: away_club_id
+        data_tests: [not_null]
+      - name: home_goals
+        data_tests: [not_null]
+      - name: away_goals
+        data_tests: [not_null]
+      - name: referee
+      - name: attendance
+
+  - name: stg_transfermarkt__clubs
+    description: One row per club that played in the season (18).
+    data_tests:
+      - row_count:
+          arguments: {min: 18, max: 18}
+    columns:
+      - name: club_id
+        data_tests: [unique, not_null]
+      - name: club_name
+        data_tests: [not_null]
+
+  - name: stg_transfermarkt__game_lineups
+    description: One row per player listed for a season game (starters and substitutes).
+    data_tests:
+      - row_count:
+          arguments: {min: 12000, max: 12400}
+      - unique_combination:
+          arguments: {columns: [game_id, player_id]}
+    columns:
+      - name: game_id
+        data_tests:
+          - relationships:
+              arguments: {to: ref('stg_transfermarkt__games'), field: game_id}
+      - name: club_id
+        data_tests: [not_null]
+      - name: player_id
+        data_tests: [not_null]
+      - name: player_name
+      - name: jersey_number
+        description: Integer.
+        data_tests: [not_null]
+      - name: is_starter
+        description: Boolean.
+        data_tests: [not_null]
+      - name: position
+
+  - name: stg_transfermarkt__appearances
+    description: One row per player and season game with minutes, goals, assists and cards.
+    data_tests:
+      - row_count:
+          arguments: {min: 9000, max: 9800}
+      - unique_combination:
+          arguments: {columns: [game_id, player_id]}
+    columns:
+      - name: game_id
+        data_tests:
+          - relationships:
+              arguments: {to: ref('stg_transfermarkt__games'), field: game_id}
+      - name: player_id
+        data_tests: [not_null]
+      - name: club_id
+        data_tests: [not_null]
+      - name: minutes_played
+        data_tests:
+          - accepted_range:
+              arguments: {min: 0, max: 150}
+      - name: goals
+      - name: assists
+      - name: yellow_cards
+      - name: red_cards
+
+  - name: stg_transfermarkt__players
+    description: One row per player listed in at least one season game, with biography.
+    data_tests:
+      - row_count:
+          arguments: {min: 500, max: 650}
+    columns:
+      - name: player_id
+        data_tests: [unique, not_null]
+      - name: player_name
+        data_tests: [not_null]
+      - name: date_of_birth
+        description: DATE, not TIMESTAMP.
+      - name: citizenship
+      - name: position
+      - name: foot
+      - name: height_cm
+
+  - name: stg_transfermarkt__player_valuations
+    description: Every market valuation of the season's players (all dates).
+    data_tests:
+      - row_count:
+          arguments: {min: 5000}
+      - unique_combination:
+          arguments: {columns: [player_id, valued_on]}
+    columns:
+      - name: player_id
+        data_tests:
+          - relationships:
+              arguments: {to: ref('stg_transfermarkt__players'), field: player_id}
+      - name: valued_on
+        data_tests: [not_null]
+      - name: market_value_eur
+        data_tests: [not_null]

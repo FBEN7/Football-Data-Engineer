@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: int_matches__crosswalk
+    description: >
+      One row per StatsBomb match, with the same match's id in Transfermarkt and
+      football-data.co.uk. Team names are the canonical ones from the team_crosswalk seed.
+    data_tests:
+      - row_count:
+          arguments: {min: 34, max: 34}
+      - scores_agree
+    columns:
+      - name: statsbomb_match_id
+        data_tests:
+          - unique
+          - not_null
+          - covers:
+              arguments: {to: ref('stg_statsbomb__matches'), field: match_id}
+      - name: transfermarkt_game_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments: {to: ref('stg_transfermarkt__games'), field: game_id}
+      - name: football_data_match_key
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments: {to: ref('stg_football_data__matches'), field: match_key}
+      - name: match_date
+        data_tests: [not_null]
+      - name: home_team
+        data_tests:
+          - relationships:
+              arguments: {to: ref('team_crosswalk'), field: canonical_name}
+      - name: away_team
+        data_tests:
+          - relationships:
+              arguments: {to: ref('team_crosswalk'), field: canonical_name}
+

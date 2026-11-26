@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: int_players__crosswalk
+    description: >
+      One row per player listed in a StatsBomb squad, linked to the same player in
+      Transfermarkt. Names alone are not enough: StatsBomb's "Eduardo dos Santos Haesler"
+      is Transfermarkt's "Dudu", and Transfermarkt has several Dudus.
+    columns:
+      - name: statsbomb_player_id
+        data_tests:
+          - unique
+          - not_null
+          - covers:
+              arguments: {to: ref('stg_statsbomb__lineups'), field: player_id}
+      - name: transfermarkt_player_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments: {to: ref('stg_transfermarkt__players'), field: player_id}
+      - name: statsbomb_player_name
+      - name: transfermarkt_player_name
+      - name: name_similarity
+        description: 0-1 string similarity of the two names, kept to review weak links.
+        data_tests:
+          - accepted_range:
+              arguments: {min: 0, max: 1}
+      - name: games_listed
+        description: StatsBomb squads in which the player is listed.
+      - name: games_linked
+        description: Of those, squads where your method found this same Transfermarkt player.
+        data_tests:
+          - expression_is_true:
+              arguments: {expression: "games_linked = games_listed"}
+    data_tests:
+      - expected_rows:
+          arguments:
+            columns: [statsbomb_player_id, transfermarkt_player_id]
+            rows:
+              - [40724, 598577]  # Florian Wirtz
+              - [3500, 111455]  # Granit Xhaka
+              - [10336, 193082]  # Alejandro Grimaldo García / Alejandro Grimaldo
+              - [32289, 656681]  # Victor Okoh Boniface / Victor Boniface
+              - [8352, 303219]  # Julian Chabot / Jeff Chabot
+              - [25040, 624690]  # Kouadio Emmanuel Koné / Manu Koné
+              - [79990, 369258]  # Eduardo dos Santos Haesler / Dudu (one of six Dudus)

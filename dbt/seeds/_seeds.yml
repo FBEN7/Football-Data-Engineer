@@ -1,0 +1,36 @@
+version: 2
+
+# M2. A hand-maintained reference table ("master data"): the 18 clubs as each source names them.
+seeds:
+  - name: team_crosswalk
+    description: One row per Bundesliga 2023/24 club. Leverkusen is filled in as an example.
+    config:
+      column_types:
+        statsbomb_team_id: integer
+        transfermarkt_club_id: bigint
+    data_tests:
+      - row_count:
+          arguments: {min: 18, max: 18}
+    columns:
+      - name: canonical_name
+        data_tests: [unique, not_null]
+      - name: statsbomb_team_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments: {to: ref('stg_statsbomb__matches'), field: home_team_id}
+      - name: transfermarkt_club_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments: {to: ref('stg_transfermarkt__clubs'), field: club_id}
+          - covers:
+              arguments: {to: ref('stg_transfermarkt__clubs'), field: club_id}
+      - name: football_data_team
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments: {to: ref('stg_football_data__matches'), field: home_team}

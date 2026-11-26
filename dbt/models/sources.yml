@@ -1,0 +1,42 @@
+version: 2
+
+# The lake: Parquet files written by the ingestion assets (src/cdp/sources), read in place.
+# Raw layer = what the provider sent, untransformed. Never select from it outside staging.
+sources:
+  - name: statsbomb
+    description: StatsBomb Open Data, one JSON payload per row.
+    meta:
+      external_location: "{{ env_var('CDP_LAKE_DIR', '../data/lake') }}/statsbomb/{name}.parquet"
+    tables:
+      - name: matches
+        description: One row per match. `payload` is the match object of matches/{comp}/{season}.json.
+      - name: events
+        description: One row per event. `payload` is the event object of events/{match_id}.json.
+        columns:
+          - name: event_id
+            data_tests: [unique, not_null]
+      - name: lineups
+        description: One row per team and match. `payload` is the team object of lineups/{match_id}.json.
+
+  - name: transfermarkt
+    description: >
+      Transfermarkt via the public-domain Kaggle dataset davidcariboo/player-scores.
+      Every competition and season: filter in staging.
+    meta:
+      external_location: "{{ env_var('CDP_LAKE_DIR', '../data/lake') }}/transfermarkt/{name}.parquet"
+    tables:
+      - name: competitions
+      - name: clubs
+      - name: players
+      - name: games
+      - name: appearances
+      - name: game_events
+      - name: game_lineups
+      - name: player_valuations
+
+  - name: football_data
+    description: football-data.co.uk season CSV, every column as text.
+    meta:
+      external_location: "{{ env_var('CDP_LAKE_DIR', '../data/lake') }}/football_data/{name}.parquet"
+    tables:
+      - name: matches

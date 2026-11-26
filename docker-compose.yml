@@ -1,0 +1,14 @@
+# docker compose up --build   ->   Dagster UI on http://localhost:3000
+services:
+  dagster:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data              # lake and warehouse stay on your disk
+      - ./dbt:/opt/cdp/dbt        # edit models without rebuilding the image
+      - ./src:/opt/cdp/src
+    environment:
+      # Transfermarkt (Kaggle): set these in a .env file next to this one, never commit it.
+      KAGGLE_USERNAME: ${KAGGLE_USERNAME:-}
+      KAGGLE_KEY: ${KAGGLE_KEY:-}

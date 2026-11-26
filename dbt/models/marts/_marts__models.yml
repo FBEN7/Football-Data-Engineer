@@ -1,0 +1,150 @@
+version: 2
+
+# M5. The consumption layer: what an analyst or a dashboard queries. One key per entity,
+# every source's attributes joined through the crosswalks.
+models:
+  - name: dim_team
+    description: One row per club (18).
+    data_tests:
+      - row_count:
+          arguments: {min: 18, max: 18}
+    columns:
+      - name: team_key
+        description: The canonical name from the team_crosswalk seed.
+        data_tests: [unique, not_null]
+      - name: statsbomb_team_id
+        data_tests: [unique]
+      - name: transfermarkt_club_id
+        data_tests: [unique, not_null]
+      - name: football_data_team
+      - name: club_name
+        description: Transfermarkt's official club name.
+
+  - name: dim_player
+    description: One row per player listed in a StatsBomb squad, with Transfermarkt biography.
+    data_tests:
+      - row_count:
+          arguments: {min: 460, max: 460}
+    columns:
+      - name: player_key
+        description: The Transfermarkt player id (it carries the biography).
+        data_tests: [unique, not_null]
+      - name: statsbomb_player_id
+        data_tests: [unique, not_null]
+      - name: player_name
+        data_tests: [not_null]
+      - name: full_name
+        description: StatsBomb's name, usually the full legal name.
+      - name: date_of_birth
+      - name: age_at_season_start
+        description: Age in whole years on var('season_start').
+        data_tests:
+          - accepted_range:
+              arguments: {min: 15, max: 45}
+      - name: citizenship
+      - name: position
+      - name: foot
+      - name: height_cm
+      - name: market_value_eur_at_season_start
+        description: Latest Transfermarkt valuation on or before var('season_start'); NULL if none.
+
+  - name: dim_match
+    description: One row per Leverkusen match (34).
+    data_tests:
+      - row_count:
+          arguments: {min: 34, max: 34}
+      - expression_is_true:
+          arguments:
+            expression: "abs(implied_prob_home + implied_prob_draw + implied_prob_away - 1) < 1e-9"
+    columns:
+      - name: match_key
+        description: The StatsBomb match id.
+        data_tests: [unique, not_null]
+      - name: transfermarkt_game_id
+        data_tests: [unique, not_null]
+      - name: football_data_match_key
+        data_tests: [unique, not_null]
+      - name: match_date
+      - name: home_team_key
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_team'), field: team_key}
+      - name: away_team_key
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_team'), field: team_key}
+      - name: home_goals
+      - name: away_goals
+      - name: referee
+      - name: attendance
+      - name: implied_prob_home
+        description: >
+          Bookmakers' probability from average odds, with the margin removed
+          (1/odds, normalised so that home + draw + away = 1).
+      - name: implied_prob_draw
+      - name: implied_prob_away
+
+  - name: fct_player_match
+    description: >
+      One row per player who played in a Leverkusen match: Transfermarkt minutes, goals,
+      assists, cards; StatsBomb shots, xG and passes.
+    data_tests:
+      - row_count:
+          arguments: {min: 1049, max: 1049}
+      - unique_combination:
+          arguments: {columns: [match_key, player_key]}
+      - expression_is_true:
+          arguments: {expression: "npxg <= xg + 1e-9 and passes_completed <= passes"}
+    columns:
+      - name: match_key
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_match'), field: match_key}
+      - name: player_key
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_player'), field: player_key}
+      - name: team_key
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_team'), field: team_key}
+      - name: is_starter
+      - name: minutes_played
+        data_tests:
+          - accepted_range:
+              arguments: {min: 1, max: 150}
+      - name: goals
+      - name: assists
+      - name: yellow_cards
+      - name: red_cards
+      - name: shots
+      - name: xg
+      - name: npxg
+        description: xG without penalties.
+      - name: passes
+      - name: passes_completed
+
+  - name: fct_team_match
+    description: One row per team and Leverkusen match (68).
+    data_tests:
+      - row_count:
+          arguments: {min: 68, max: 68}
+      - unique_combination:
+          arguments: {columns: [match_key, team_key]}
+    columns:
+      - name: match_key
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_match'), field: match_key}
+      - name: team_key
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_team'), field: team_key}
+      - name: is_home
+      - name: goals_for
+      - name: goals_against
+      - name: shots_statsbomb
+      - name: shots_football_data
+      - name: xg_for
+      - name: xg_against
+      - name: implied_win_prob

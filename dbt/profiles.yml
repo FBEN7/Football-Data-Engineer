@@ -1,0 +1,7 @@
+club:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('CDP_WAREHOUSE', '../data/warehouse.duckdb') }}"
+      threads: 4

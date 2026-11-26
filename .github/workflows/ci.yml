@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests
+      - uses: actions/cache@v4
+        with:
+          path: data/cache
+          key: sources-${{ hashFiles('src/cdp/config.py') }}
+      - name: Ingest StatsBomb and football-data
+        run: python -m cdp ingest --source statsbomb --source football_data
+      - name: Ingest Transfermarkt (needs the KAGGLE_USERNAME / KAGGLE_KEY repository secrets)
+        if: env.KAGGLE_KEY != ''
+        run: python -m cdp ingest --source transfermarkt
+      - name: dbt build (every enabled milestone, with its tests)
+        run: python -m cdp dbt build
+      - run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t club-data-platform .
