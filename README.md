@@ -27,12 +27,13 @@ identifiers, consolidates them into one tested warehouse, and orchestrates it en
 |---|---|
 | Ingestion of the 3 sources, orchestration, CI, Docker | done |
 | Staging StatsBomb | done |
-| M1 staging Transfermarkt and football-data | to do |
-| M2 team crosswalk | to do |
-| M3 match crosswalk | to do |
-| M4 player crosswalk (entity resolution) | to do |
-| M5 marts | to do |
-| M6 cross-source reconciliation | to do |
+| M1 staging Transfermarkt and football-data | done |
+| M2 team crosswalk | done |
+| M3 match crosswalk | done |
+| M4 player crosswalk (entity resolution) | done |
+| M5 marts | done |
+| M6 cross-source reconciliation | done |
+| M7 Streamlit dashboard | done |
 
 ## Run it
 
@@ -44,6 +45,13 @@ dagster dev -m cdp.definitions    # http://localhost:3000
 ```
 
 Or run `docker compose up --build`.
+
+Start the M7 dashboard after dbt build:
+
+```bash
+pip install -e ".[dashboard]"
+streamlit run dashboard/app.py
+```
 
 ## Why this is not trivial
 

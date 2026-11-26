@@ -1,13 +1,14 @@
--- M1 · TODO: Season games only. Which club column is the club the player played FOR in that game?
--- Columns and tests: see the .yml file in this folder. Replace this whole query.
+-- M1: season appearances for the player club, not the opponent club.
 select
-    null::varchar as appearance_id,
-    null::bigint  as game_id,
-    null::bigint  as player_id,
-    null::bigint  as club_id,
-    null::bigint  as minutes_played,
-    null::bigint  as goals,
-    null::bigint  as assists,
-    null::bigint  as yellow_cards,
-    null::bigint  as red_cards
-where false
+    a.appearance_id::varchar as appearance_id,
+    a.game_id::bigint as game_id,
+    a.player_id::bigint as player_id,
+    a.player_club_id::bigint as club_id,
+    a.minutes_played::bigint as minutes_played,
+    a.goals::bigint as goals,
+    a.assists::bigint as assists,
+    a.yellow_cards::bigint as yellow_cards,
+    a.red_cards::bigint as red_cards
+from {{ source('transfermarkt', 'appearances') }} a
+inner join {{ ref('stg_transfermarkt__games') }} g
+    on g.game_id = a.game_id

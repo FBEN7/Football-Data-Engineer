@@ -1,12 +1,13 @@
--- M1 · TODO: Season games only. jersey_number arrives as text; is_starter comes from the 'type' column.
--- Columns and tests: see the .yml file in this folder. Replace this whole query.
+-- M1: season games only.
 select
-    null::bigint  as game_id,
-    null::bigint  as club_id,
-    null::bigint  as player_id,
-    null::varchar as player_name,
-    null::integer as jersey_number,
-    null::boolean as is_starter,
-    null::varchar as position,
-    null::boolean as is_captain
-where false
+    l.game_id::bigint as game_id,
+    l.club_id::bigint as club_id,
+    l.player_id::bigint as player_id,
+    l.player_name::varchar as player_name,
+    l.number::integer as jersey_number,
+    (l.type = 'starting_lineup') as is_starter,
+    l.position::varchar as position,
+    coalesce(l.team_captain::boolean, false) as is_captain
+from {{ source('transfermarkt', 'game_lineups') }} l
+inner join {{ ref('stg_transfermarkt__games') }} g
+    on g.game_id = l.game_id

@@ -28,24 +28,24 @@ models:
       statsbomb:
         +enabled: true
       transfermarkt:
-        +enabled: false  # M1
+        +enabled: true
       football_data:
-        +enabled: false  # M1
+        +enabled: true
     intermediate:
       matches:
-        +enabled: false  # M3
+        +enabled: true
       players:
-        +enabled: false  # M4
+        +enabled: true
     marts:
-      +enabled: false  # M5
+      +enabled: true  # M5
       +materialized: table
     reports:
-      +enabled: false  # M6
+      +enabled: true
       +materialized: table
 
 seeds:
   club:
-    +enabled: false  # M2
+    +enabled: true
 
 data_tests:
   club:

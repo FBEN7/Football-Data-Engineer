@@ -1,6 +1,7 @@
 name: ci
 
 on:
+  workflow_dispatch:
   push:
   pull_request:
 
@@ -33,6 +34,15 @@ jobs:
       - name: dbt build (every enabled milestone, with its tests)
         run: python -m cdp dbt build
       - run: pytest -q
+      - name: Upload built warehouse
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cdp-built-data
+          path: |
+            data/lake
+            data/warehouse.duckdb
+          if-no-files-found: warn
 
   docker:
     runs-on: ubuntu-latest
