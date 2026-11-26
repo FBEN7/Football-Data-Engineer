@@ -37,7 +37,7 @@ dagster dev -m cdp.definitions       # interface sur http://localhost:3000
 
 Avec Docker Desktop, `docker compose up --build` fait la même chose sans installer Python.
 
-Pour la CI, ajoute tes identifiants Kaggle comme **secrets** du repo GitHub (`KAGGLE_USERNAME` et `KAGGLE_KEY`), sinon Transfermarkt ne sera pas chargé.
+Pour la CI, ajoute ton token Kaggle comme **secret** du repo GitHub (Settings → Secrets and variables → Actions) : `KAGGLE_API_TOKEN` pour un token récent (qui commence par `KGAT_`), ou la paire `KAGGLE_USERNAME` + `KAGGLE_KEY` d'un ancien `kaggle.json`. Sans secret, la CI saute Transfermarkt.
 
 ---
 

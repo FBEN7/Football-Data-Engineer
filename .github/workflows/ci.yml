@@ -8,6 +8,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      # Transfermarkt needs a Kaggle token: either a new-style API token (KAGGLE_API_TOKEN)
+      # or a legacy kaggle.json pair (KAGGLE_USERNAME + KAGGLE_KEY), as repository secrets.
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
       KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
       KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
     steps:
@@ -24,8 +27,8 @@ jobs:
           key: sources-${{ hashFiles('src/cdp/config.py') }}
       - name: Ingest StatsBomb and football-data
         run: python -m cdp ingest --source statsbomb --source football_data
-      - name: Ingest Transfermarkt (needs the KAGGLE_USERNAME / KAGGLE_KEY repository secrets)
-        if: env.KAGGLE_KEY != ''
+      - name: Ingest Transfermarkt (skipped when no Kaggle secret is set)
+        if: env.KAGGLE_API_TOKEN != '' || env.KAGGLE_KEY != ''
         run: python -m cdp ingest --source transfermarkt
       - name: dbt build (every enabled milestone, with its tests)
         run: python -m cdp dbt build
